@@ -1,5 +1,87 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-float: float 3s ease-in-out infinite;
+  
+  --keyframes-float: {
+    0%, 100%: { transform: translateY(0px); }
+    50%: { transform: translateY(-20px); }
+  };
+}
+
+@layer utilities {
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .hidden-view {
+    display: none !important;
+  }
+  .lyrics-container::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-letter::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scroll-letter::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+  }
+
+  .memory-marquee {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .memory-marquee::-webkit-scrollbar {
+    display: none;
+  }
+
+  .memory-track {
+    width: max-content;
+    display: flex;
+    gap: 1rem;
+    animation: memory-slide 26s linear infinite;
+  }
+
+  .memory-marquee:hover .memory-track {
+    animation-play-state: paused;
+  }
+
+  .memory-card {
+    width: 13rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    transition: transform 200ms ease;
+  }
+
+  .memory-card:hover {
+    transform: translateY(-6px) scale(1.03);
+  }
+}
+
+@keyframes memory-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
