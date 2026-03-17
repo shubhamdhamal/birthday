@@ -4,36 +4,105 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Mail, CakeSlice, ArrowLeft, ChevronDown, ArrowRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { OrbitControls } from '@react-three/drei';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 // Dynamic import for 3D component to ensure it only loads on client side
 const BirthdayCake3D = dynamic(() => import('@/components/BirthdayCake3D'), { ssr: false });
 import { Canvas } from '@react-three/fiber';
 
+type MemoryCard = {
+  bgColor: string;
+  title: string;
+  description: string;
+  src: string;
+};
+
+function StackingMemoryCard({
+  card,
+  index,
+  total,
+  containerRef,
+}: {
+  card: MemoryCard;
+  index: number;
+  total: number;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    container: containerRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const scaleMultiplier = 0.03;
+  const targetScale = 1 - (total - index - 1) * scaleMultiplier;
+  const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale]);
+
+  return (
+    <div
+      ref={sectionRef}
+      className="sticky h-[620px] grid place-content-center"
+      style={{ top: `${16 + index * 14}px` }}
+    >
+      <motion.article
+        style={{ scale }}
+        className={`${card.bgColor} flex flex-col sm:flex-row gap-4 sm:gap-6 w-[min(90vw,22rem)] sm:w-11/12 md:w-11/12 sm:h-[70%] md:h-[80%] lg:h-[84%] md:aspect-video px-4 py-4 md:px-8 md:py-10 rounded-3xl mx-auto relative shadow-[0_24px_70px_rgba(0,0,0,0.35)] border border-white/20`}
+      >
+        <div className="order-2 sm:order-1 flex-1 flex flex-col justify-center">
+          <h3 className="font-bold text-xl md:text-2xl mb-4 text-white">{card.title}</h3>
+          <p className="text-sm md:text-base text-white/90 leading-relaxed">{card.description}</p>
+        </div>
+
+        <div className="order-1 sm:order-2 w-full sm:w-1/2 rounded-xl aspect-[3/4] sm:aspect-video relative overflow-hidden border border-white/20 bg-black/10">
+          <img
+            alt={card.title}
+            className="w-full h-full object-cover"
+            src={card.src}
+          />
+        </div>
+      </motion.article>
+    </div>
+  );
+}
+
 export default function Home() {
   const [currentView, setCurrentView] = useState<'landing' | 'birthday' | 'lyrics' | 'letter'>('landing');
   const [flowerProgress, setFlowerProgress] = useState(0);
-  const [activeMemory, setActiveMemory] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const memoryContainerRef = useRef<HTMLDivElement>(null);
   const memoryCards = [
-    { src: '/memory1.jpg', caption: 'The first spark' },
-    { src: '/memory2.jpg', caption: 'The loudest laugh' },
-    { src: '/memory1.jpg', caption: 'Golden hour smiles' },
-    { src: '/memory2.jpg', caption: 'Unfiltered chaos' },
+    {
+      bgColor: 'bg-[#f97316]',
+      title: 'The Guiding Light',
+      description: 'Even in difficult days, your smile has always been my lighthouse and my calm.',
+      src: '/image1.jpeg',
+    },
+    {
+      bgColor: 'bg-[#0015ff]',
+      title: 'Life Beneath the Waves',
+      description: 'In every hidden layer of life, you bring depth, color, and meaning to everything.',
+      src: '/image2.jpeg',
+    },
+    {
+      bgColor: 'bg-[#ff5941]',
+      title: 'Alone on the Open Sea',
+      description: 'When the world goes silent, memories of you still feel like home and warm light.',
+      src: '/image3.jpeg',
+    },
+    {
+      bgColor: 'bg-[#1f464d]',
+      title: 'The Art of Sailing',
+      description: 'With you, every journey feels like a soft adventure guided by trust and joy.',
+      src: '/image1.jpeg',
+    },
   ];
 
   // Switch view function
   const switchView = (view: 'landing' | 'birthday' | 'lyrics' | 'letter') => {
     setCurrentView(view);
     window.scrollTo(0, 0);
-  };
-
-  const showPrevMemory = () => {
-    setActiveMemory((prev) => (prev - 1 + memoryCards.length) % memoryCards.length);
-  };
-
-  const showNextMemory = () => {
-    setActiveMemory((prev) => (prev + 1) % memoryCards.length);
   };
 
   useEffect(() => {
@@ -125,7 +194,7 @@ export default function Home() {
 
   return (
     <div className="bg-slate-900 text-white overflow-x-hidden font-sans min-h-screen">
-      <audio ref={audioRef} src="/Dooron.mp3" autoPlay loop preload="auto" />
+      <audio ref={audioRef} src="/MainAgarKahoon.mp3" autoPlay loop preload="auto" />
       
       {/* Global Audio Control */}
       <div className="fixed top-6 right-6 z-50">
@@ -180,7 +249,7 @@ export default function Home() {
         
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500">
-            Happy Birthday My Love!
+            Happy Birthday My Gurl!
           </h1>
         </div>
 
@@ -214,68 +283,35 @@ export default function Home() {
 
         <div className="w-full max-w-4xl px-4 flex flex-col gap-32 pb-40">
           <div className="scroll-reveal opacity-0 transition-opacity duration-1000 flex flex-col md:flex-row items-center gap-8">
-            <img alt="Memory 1" className="w-full md:w-1/2 rounded-3xl shadow-2xl grayscale hover:grayscale-0 transition-all" src="/memory1.jpg" />
+            <img alt="Memory 1" className="w-10/12 sm:w-3/4 md:w-2/5 rounded-3xl shadow-2xl md:grayscale md:hover:grayscale-0 transition-all" src="/image1.jpeg" />
             <p className="text-xl text-white/80 italic">"Thinking back to when this all started..."</p>
           </div>
           
           <div className="scroll-reveal opacity-0 transition-opacity duration-1000 flex flex-col md:flex-row-reverse items-center gap-8">
-            <img alt="Memory 2" className="w-full md:w-1/2 rounded-3xl shadow-2xl grayscale hover:grayscale-0 transition-all" src="/memory2.jpg" />
+            <img alt="Memory 2" className="w-10/12 sm:w-3/4 md:w-2/5 rounded-3xl shadow-2xl md:grayscale md:hover:grayscale-0 transition-all" src="/image2.jpeg" />
             <p className="text-xl text-white/80 italic">"...and every laugh we've shared since."</p>
           </div>
 
-          <div className="scroll-reveal opacity-0 transition-opacity duration-1000 glassmorphism rounded-3xl p-6 md:p-8">
-            <div className="flex items-end justify-between gap-4 mb-5">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-wide">Memories Carousel</h2>
-              <span className="text-xs uppercase tracking-[0.25em] text-white/60">Tap Arrows</span>
-            </div>
-
-            <div className="relative">
-              <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/5">
-                <div
-                  className="flex transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${activeMemory * 100}%)` }}
-                >
-                  {memoryCards.map((memory, index) => (
-                    <figure className="w-full shrink-0" key={`${memory.caption}-${index}`}>
-                      <img
-                        alt={`Memory slide ${index + 1}`}
-                        className="w-full h-56 md:h-72 object-cover"
-                        src={memory.src}
-                      />
-                      <figcaption className="text-base text-white/85 px-4 py-3 bg-black/25 backdrop-blur-sm">
-                        {memory.caption}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
+          <div className="scroll-reveal opacity-0 transition-opacity duration-1000 rounded-3xl overflow-hidden bg-slate-900 border border-white/10">
+            <div
+              className="h-[620px] overflow-auto text-white"
+              ref={memoryContainerRef}
+            >
+              <div className="relative h-[620px] w-full z-10 text-4xl md:text-7xl font-bold uppercase flex justify-center items-center text-[#ff5941] whitespace-pre">
+                Scroll down ↓
               </div>
 
-              <button
-                className="absolute top-1/2 -translate-y-1/2 left-2 md:left-3 p-2 rounded-full glassmorphism hover:bg-white/20 transition-colors"
-                onClick={showPrevMemory}
-                aria-label="Previous memory"
-              >
-                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
-
-              <button
-                className="absolute top-1/2 -translate-y-1/2 right-2 md:right-3 p-2 rounded-full glassmorphism hover:bg-white/20 transition-colors"
-                onClick={showNextMemory}
-                aria-label="Next memory"
-              >
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
-            </div>
-
-            <div className="mt-4 flex items-center justify-center gap-2">
-              {memoryCards.map((_, index) => (
-                <button
-                  key={`memory-dot-${index}`}
-                  onClick={() => setActiveMemory(index)}
-                  aria-label={`Go to memory ${index + 1}`}
-                  className={`h-2.5 rounded-full transition-all ${activeMemory === index ? 'w-8 bg-pink-300' : 'w-2.5 bg-white/40 hover:bg-white/70'}`}
+              {memoryCards.map((memory, index) => (
+                <StackingMemoryCard
+                  key={`${memory.title}-${index}`}
+                  card={memory}
+                  index={index}
+                  total={memoryCards.length}
+                  containerRef={memoryContainerRef}
                 />
               ))}
+
+              
             </div>
           </div>
           
@@ -288,7 +324,7 @@ export default function Home() {
       {/* Lyrics View */}
       <section className={`${currentView === 'lyrics' ? 'flex' : 'hidden-view'} h-screen w-full bg-black relative items-center justify-center overflow-hidden`} id="lyricsView">
         <div className="absolute inset-0 opacity-30">
-          <img alt="Anime Background" className="w-full h-full object-cover" src="/background.jpg" />
+          <img alt="Anime Background" className="w-full h-full object-cover" src="/image1.jpeg" />
         </div>
         
         <button className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/70 hover:text-white" onClick={() => switchView('birthday')}>
@@ -315,10 +351,10 @@ export default function Home() {
              }}
         >
           <div className="space-y-16 py-[50vh]">
-            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">In the starlight of your eyes</p>
-            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">Where the softest summer lies</p>
-            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">Every moment is a treasure</p>
-            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">A joy that I can't measure</p>
+            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">हर नजर को एक नजर कि तलाश है </p>
+            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">इस चेहरे मे कुछ तो खास है</p>
+            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">आपसे दोस्ती हम यु नही कर बैठे</p>
+            <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">क्य़ा करे हमरी पसन्द हि कुछ खास है !</p>
             <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">Happy Birthday to my brightest star</p>
             <p className="lyric-line text-2xl md:text-4xl font-light opacity-30 transition-all duration-700">I love exactly who you are</p>
             
@@ -369,12 +405,12 @@ export default function Home() {
           <div className={`mx-auto bg-white/80 backdrop-blur-md w-full max-w-lg rounded-t-3xl p-8 shadow-2xl transition-transform duration-1000 ${flowerProgress >= 100 ? 'translate-y-0' : 'translate-y-full'}`}>
             <div className="w-12 h-1.5 bg-sky-200 rounded-full mx-auto mb-6"></div>
             <div className="scroll-letter max-h-[40vh] overflow-y-auto text-sky-900 leading-relaxed text-left space-y-4 pr-2">
-              <p className="font-bold text-xl">Dearest My Love,</p>
+              <p className="font-bold text-xl">Dearest My gurl,</p>
               <p>Writing this wasn't easy because words often fail to capture the depth of how much you mean to me. As you celebrate another trip around the sun, I wanted to take a moment to tell you just how special you are.</p>
               <p>Like a flower blooming in the most unexpected places, you bring color and fragrance into my world every single day. Your kindness, your laugh, and your incredible spirit make everything brighter.</p>
               <p>I hope today is filled with as much happiness as you give to everyone around you. You deserve the stars, the moon, and all the beautiful things life has to offer.</p>
               <p>Thank you for being you. Happy Birthday!</p>
-              <p className="font-bold pt-4">With love,<br/>Your Pavan</p>
+              <p className="font-bold pt-4">With love,<br/>Your CP</p>
             </div>
           </div>
         </div>
