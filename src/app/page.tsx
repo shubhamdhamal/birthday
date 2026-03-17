@@ -249,7 +249,7 @@ export default function Home() {
         
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500">
-            Happy Birthday My Gurl!
+            Happy Birthday Dr. Sanchi🎀
           </h1>
         </div>
 
